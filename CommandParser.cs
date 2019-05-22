@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Unix_tr
 {
     class CommandParser
     {
-        //public string path;
-        //public string Command { set; get; }
         string[] alphabet = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
 
 
@@ -114,14 +113,111 @@ namespace Unix_tr
         }
         public void DCommand(List<string> commands)
         {
+            List<string> delete = ParseCommand(commands[0]);
+            commands.Remove(commands[0]);
+            string text = "";
+            if (commands[0] == "<")
+            {
+                string path = @"D:\C#\Unix-tr\Unix-tr\" + commands[1];
+                using (StreamReader reader = new StreamReader(path, Encoding.Default))
+                {
+                    text = reader.ReadToEnd();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < commands.Count; i++)
+                {
+                    text += commands[i] + " ";
+                }
+            }
+            for (int i = 0; i < delete.Count; i++)
+            {
+                text = text.Replace(delete[i], "");
+            }
+            Console.WriteLine(text);
 
         }
         public void CCommand(List<string> commands)
         {
+            List<string> save = ParseCommand(commands[0]);
+            List<string> change = ParseCommand(commands[1]);
+            if(change.Count != 1)
+            {
+                throw new Exception("syntax error");
+            }
+            commands.Remove(commands[0]);
+            commands.Remove(commands[0]);
+            string text = "";
+            if (commands[0] == "<")
+            {
+                string path = @"D:\C#\Unix-tr\Unix-tr\" + commands[1];
+                using (StreamReader reader = new StreamReader(path, Encoding.Default))
+                {
+                    text = reader.ReadToEnd();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < commands.Count; i++)
+                {
+                    text += commands[i] + " ";
+                }
+            }
+            Console.WriteLine(text);
+            bool isFound = false;
+            string space = " ";
+            for (int i = 0; i < text.Length; i++)
+            {
+                for (int j = 0; j < save.Count; j++)
+                {
+                    if (save[j][0] == text[i] || space[0] == text[i])
+                    {
+                        isFound = true;
+                        break;
+                    }
+
+                }
+                if (!isFound)
+                {
+
+                    text = text.Replace(text[i], change[0][0]);
+                }
+                isFound = false;
+
+
+            }
+
+            Console.WriteLine(text);
+
 
         }
         public void CDCommand(List<string> commands)
         {
+            List<string> cdcommand = ParseCommand(commands[0]);
+            commands.Remove(commands[0]);
+            string text = "";
+            if (commands[0] == "<")
+            {
+                string path = @"D:\C#\Unix-tr\Unix-tr\" + commands[1];
+                using (StreamReader reader = new StreamReader(path, Encoding.Default))
+                {
+                    text = reader.ReadToEnd();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < commands.Count; i++)
+                {
+                    text += commands[i] + " ";
+                }
+            }
+            for (int i = 0; i < cdcommand.Count; i++)
+            {
+                text = Regex.Replace(text, @"[^0-9$,]", "");
+            }
+            Console.WriteLine(text);
+
 
         }
         public void DefaultCommand(List<string> commands)
@@ -156,7 +252,6 @@ namespace Unix_tr
             }
             for (int i = 0; i < changeTo.Count; i++)
             {
-                Console.WriteLine(changeFrom[i] + " = " + changeTo[i]);
                 text = text.Replace(changeFrom[i], changeTo[i]);
             }
             Console.WriteLine(text);
@@ -165,26 +260,27 @@ namespace Unix_tr
         public void Parse(string command)
         {
             List<string> commList = new List<string>(command.Split());
-            //for (int i = 1; i < commList.Count - 1; i++)
-            //{
-            //    if(commList[i][0] == '"' && commList[i + 1][0] == '"')
-            //    {
-            //        commList[i + 1] = "\" \"";
-            //        commList.Remove(commList[i]);
-            //        break;
-            //    }  
-
-            //}
-            if(commList[0] != "tr")
+            if(commList[0] != "tr" && commList[0] != "-help")
             {
                 throw new Exception("syntax error (wrong enter)!");
             }
-            else
+            else if(commList[0] == "-help")
+            {
+                Console.WriteLine("Commands:");
+                Console.WriteLine("-c - indicates the complement of the first set of characters;");
+                Console.WriteLine("-cd - removes all non-alphanumeric characters;");
+                Console.WriteLine("-d - delete all characters from first set;");
+                Console.WriteLine("default - change all characters from first set into corresponding characters from second set;");
+                commList[0] = "end";
+            }
+            else 
             {
                 commList.Remove(commList[0]);
             }
-            switch(commList[1])
+            switch(commList[0])
             {
+                case "end":
+                    break;
                 case "-s":
                     commList.Remove(commList[0]);
                     SCommand(commList);
